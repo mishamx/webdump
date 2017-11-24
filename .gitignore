@@ -1,0 +1,7 @@
+.env
+.idea
+.DS_Store
+app
+main
+request_header.txt
+request_full.txt
