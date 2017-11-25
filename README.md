@@ -10,7 +10,7 @@ Install and run
 
 
 ```bash
-curl -fsSL https://raw.github.com/mishamx/webdump/master/webdump
+wget https://raw.github.com/mishamx/webdump/master/webdump && chmod +x webdump
 ```
 
 ### Run
