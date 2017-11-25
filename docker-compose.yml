@@ -1,0 +1,26 @@
+version: '3.3'
+
+services:
+    webdump:
+        image: mishamx/webdump:0.1
+        environment:
+            WEBDUMP_LISTEN: ":3001"
+            WEBDUMP_TESTING_PATH: "/my/test/path"
+            WEBDUMP_FILE_HEADER: "header.txt"
+            WEBDUMP_FILE_FULL: "fullrequest.txt"
+        ports:
+            - "3001:3001"
+        networks:
+            - frontend
+    ngrok:
+        image: wernight/ngrok
+        links:
+            - "webdump"
+        ports:
+            - "4040:4040"
+        networks:
+            - frontend
+        command: ["/bin/ngrok", "http", "webdump:3001"]
+
+networks:
+    frontend:

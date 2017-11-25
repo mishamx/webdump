@@ -9,9 +9,9 @@ import (
 )
 
 var listenHost string = ":3001"
-
-const fileHeader = "request_header.txt"
-const fileBody = "request_full.txt"
+var testingPath string = "/request/test/"
+var fileHeader string = "request_header.txt"
+var fileFull string = "request_full.txt"
 
 type resp struct {
 	HeaderFile string `json:"header"`
@@ -20,20 +20,30 @@ type resp struct {
 }
 
 func init() {
-	if (os.Getenv("LISTEN") != "") {
-		listenHost = os.Getenv("LISTEN")
+	if (os.Getenv("WEBDUMP_LISTEN") != "") {
+		listenHost = os.Getenv("WEBDUMP_LISTEN")
+	}
+	if (os.Getenv("WEBDUMP_TESTING_PATH") != "") {
+		testingPath = os.Getenv("WEBDUMP_TESTING_PATH")
+	}
+	if (os.Getenv("WEBDUMP_FILE_HEADER") != "") {
+		fileHeader = os.Getenv("WEBDUMP_FILE_HEADER")
+	}
+	if (os.Getenv("WEBDUMP_FILE_FULL") != "") {
+		fileFull = os.Getenv("WEBDUMP_FILE_FULL")
 	}
 }
 
 func main() {
-	http.HandleFunc("/request/test/", postHandler)
+	http.HandleFunc(testingPath, postHandler)
 	http.HandleFunc("/"+fileHeader, getHandlerFileHeader)
-	http.HandleFunc("/"+fileBody, getHandlerFileBody)
+	http.HandleFunc("/"+fileFull, getHandlerfileFull)
 	log.Println("Listening " + listenHost + " ...")
 	http.ListenAndServe(listenHost, nil)
 }
 
 func getHandlerFileHeader(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%v %v %v", r.Method, r.URL, r.Proto)
 	file, err := os.Open(fileHeader)
 	if err != nil {
 		log.Println(r)
@@ -42,8 +52,9 @@ func getHandlerFileHeader(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, file)
 }
 
-func getHandlerFileBody(w http.ResponseWriter, r *http.Request) {
-	file, err := os.Open(fileBody)
+func getHandlerfileFull(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%v %v %v", r.Method, r.URL, r.Proto)
+	file, err := os.Open(fileFull)
 	if err != nil {
 		log.Println(r)
 	}
@@ -53,7 +64,8 @@ func getHandlerFileBody(w http.ResponseWriter, r *http.Request) {
 
 func postHandler(w http.ResponseWriter, r *http.Request) {
 
-	log.Println(formatRequest(r))
+	log.Printf("%v %v %v", r.Method, r.URL, r.Proto)
+
 	defer r.Body.Close()
 
 	// write header file
@@ -65,7 +77,7 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 	head.WriteString(formatRequest(r))
 
 	// write header file
-	full, err := os.Create(fileBody)
+	full, err := os.Create(fileFull)
 	if err != nil {
 		log.Println(r)
 	}
@@ -77,12 +89,12 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	rjson := resp{
 		"/" + fileHeader,
-		"/" + fileBody,
-		"curl http://localhost:3001/request_header.txt or curl http://localhost:3001/request_full.txt -o request_full.txt",
+		"/" + fileFull,
+		"curl http://localhost:3001/"+fileHeader+" or for ngrok curl http://"+r.Host+"/"+fileHeader,
 	}
 	if err := json.NewEncoder(w).Encode(rjson); err != nil {
 		log.Panic(err)
 		return
 	}
-	
+
 }
